@@ -1,0 +1,26 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<flights>
+    <flight flightCode="ER38sd">
+        <airline>United</airline>
+        <departureDate>2015-Mar-20</departureDate>
+        <emptySeats>0</emptySeats>
+        <fromAirportCode>MUA</fromAirportCode>
+        <planeType>Boeing 737</planeType>
+        <price>400.0</price>
+        <toAirportCode>SFO</toAirportCode>
+        <transactions>
+            <transaction transID="181948544" amount="735.0">
+                <idCustomer>4564</idCustomer>
+                <nameCustomer>Max Plack</nameCustomer>
+                <type>business</type>
+                <amountUSFormatted>735.00</amountUSFormatted>
+            </transaction>
+            <transaction transID="181948717" amount="6032.0">
+                <idCustomer>4968</idCustomer>
+                <nameCustomer>Nick The Shoemaker</nameCustomer>
+                <type>personal</type>
+                <amountUSFormatted>6,032.00</amountUSFormatted>
+            </transaction>
+        </transactions>
+    </flight>
+</flights>

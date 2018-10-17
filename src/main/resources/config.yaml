@@ -1,0 +1,47 @@
+http:
+  port: "8081"
+
+sfdc:
+  username: "nkuo@trimendus.com"
+  password: "SF@1027@2018"
+  token: "OaHvCfYb2JLlVVA6EaoYNXXqD"
+  
+american:
+  host: "training4-american-api-nkuo.us-e2.cloudhub.io"
+  port: "80"
+  protocol: "HTTP"
+  client_id: "1c3b5c29c03d4281b55724761b52546c"
+  client_secret: "82dd2aa14A1247D88eef20A2805001f2"
+
+training:
+  host: "mu.learn.mulesoft.com"
+  port: "80"
+  basepath: "/"
+  protocol: "HTTP"
+  
+delta:
+  wsdl: "http://mu.learn.mulesoft.com/delta?wsdl"
+  service: "TicketServiceService"
+  port: "TicketServicePort"
+
+transaction:
+  wsdl: "http://apdev-accounts-ws.cloudhub.io/api/transactions?wsdl"
+  service: "TransactionServiceService"
+  port: "TransactionServicePort"
+  address: "http://apdev-accounts-ws.cloudhub.io/api/transactions"
+
+accounts:
+  host: "apdev-accounts-ws.cloudhub.io"
+  port: "80"
+  basePath: "/api"  
+  
+file:
+  accountsDir: "D:/Mule_Training/MUFundamentals4.1_studentFiles_22sept2018/resources"
+
+db:
+  host: "mudb.learn.mulesoft.com"
+  port: "3306"
+  user: "mule"
+  password: "mule"
+  database: "training"
+  

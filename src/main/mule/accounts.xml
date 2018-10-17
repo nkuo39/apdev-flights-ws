@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:jms="http://www.mulesoft.org/schema/mule/jms" xmlns:os="http://www.mulesoft.org/schema/mule/os"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:file="http://www.mulesoft.org/schema/mule/file" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/os http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd
+http://www.mulesoft.org/schema/mule/jms http://www.mulesoft.org/schema/mule/jms/current/mule-jms.xsd">
+	<file:config name="File_Config" doc:name="File Config" doc:id="95d22e7f-f973-4e5b-94d6-7bff0f24d1c9" >
+		<file:connection workingDir="${file.accountsDir}" />
+	</file:config>
+	<flow name="triggerFlow" doc:id="bb576217-3884-4d64-92fe-92398af40b75" >
+		<file:listener doc:name="On New or Updated File" doc:id="87ed6db8-ecc4-4567-b58e-9abd867830d2" config-ref="File_Config" directory="input" moveToDirectory="output" renameTo='#[attributes.fileName ++ ".backup"]'>
+			<scheduling-strategy >
+				<fixed-frequency />
+			</scheduling-strategy>
+			<file:matcher filenamePattern="*.csv" />
+		</file:listener>
+		<logger level="INFO" doc:name="Logger" doc:id="b29dbe02-4e4d-4144-83d8-0d4d1e86cd8c" message="#[payload]"/>
+	</flow>
+	<flow name="syncDBaccountsToCSV" doc:id="2ca78b71-3dcd-471d-b670-b5dae72e0fd9" initialState="stopped">
+		<db:listener table="accounts" doc:name="accounts" doc:id="97c54ac3-2cc4-4bfc-b2e9-15eebb3921bf" config-ref="Database_Config" watermarkColumn="accountID" idColumn="accountID">
+			<scheduling-strategy >
+				<fixed-frequency frequency="10" timeUnit="SECONDS" />
+			</scheduling-strategy>
+		</db:listener>
+		<ee:transform doc:name="Java to CSV" doc:id="a634910e-0451-443f-b86a-cb5c6f744b3c" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/csv header=false
+---
+[payload]]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<file:write doc:name="DBaccounts.csv" doc:id="d4a199c0-bde5-4406-b017-9b3b98fb0eb1" config-ref="File_Config" path="output/DBaccounts.csv" mode="APPEND"/>
+		<logger level="INFO" doc:name="payload" doc:id="167cbea6-2063-424b-b5b6-6ddc7fa4cba3" message="#[payload]"/>
+	</flow>
+	<flow name="syncDBaccountsWithPostal" doc:id="52b35a01-8001-4b34-8afa-379ded8a8aaf">
+		<scheduler doc:name="Scheduler" doc:id="f7b9765b-145c-42c9-9da6-83a7efbd84b6" >
+			<scheduling-strategy >
+				<fixed-frequency frequency="10" timeUnit="SECONDS"/>
+			</scheduling-strategy>
+		</scheduler>
+		<os:retrieve doc:name="lastAccountID" doc:id="9a45b991-1637-4fad-941b-9bbec6cc3415" key="lastAccountID" target="lastAccountID">
+			<os:default-value><![CDATA[0]]></os:default-value>
+		</os:retrieve>
+		<db:select doc:name="accounts" doc:id="ed501b2e-364e-4619-b44b-f4e65119e4c4" config-ref="Database_Config">
+			<db:sql >SELECT * FROM accounts WHERE postal = :postal AND accountID &gt; :lastAccountID</db:sql>
+			<db:input-parameters ><![CDATA[#[{postal: '94111', lastAccountID: vars.lastAccountID}]]]></db:input-parameters>
+		</db:select>
+		<choice doc:name="Choice" doc:id="71f4bdba-a563-46b6-aecc-f994abf624d2" >
+			<when expression="#[not isEmpty(payload)]">
+				<os:store doc:name="lastAccountID" doc:id="3b4f9c79-bc98-46b8-8f3f-31bebb70ad80" key="lastAccountID">
+			<os:value><![CDATA[#[max(payload.*accountID)]]]></os:value>
+		</os:store>
+				<file:write doc:name="DBaccountsPostal.csv" doc:id="e7b2d7da-9e22-45cf-b567-367bbeadceb2" config-ref="File_Config" path="output/DBaccountsPostal.csv" mode="APPEND">
+			<file:content><![CDATA[#[output application/csv header=false --- payload]]]></file:content>
+		</file:write>
+				<jms:publish doc:name="JMS accountsQ" doc:id="df95af60-488f-4b91-8808-25ec5e6f9f28" config-ref="JMS_Config" destination="accountsQ">
+					<jms:message >
+						<jms:body ><![CDATA[#[output application/json --- payload]]]></jms:body>
+						<jms:properties ><![CDATA[#[{"publisher":"training"}]]]></jms:properties>
+					</jms:message>
+				</jms:publish>
+				<logger level="INFO" doc:name="CSV Payload" doc:id="f8200273-f49a-438e-a7bd-70e50117ea58" message="#[output application/csv --- payload]" />
+			</when>
+			<otherwise >
+				<logger level="INFO" doc:name="No new records" doc:id="0c58f9da-55d8-469c-8b14-457892539dc3" message="No new records"/>
+			</otherwise>
+		</choice>
+	</flow>
+	<flow name="receiveJMSMessages" doc:id="65874b18-4055-4023-8db0-275f5d40622a" >
+		<jms:listener doc:name="JMS accountsQ" doc:id="a3e06c40-3a78-40f8-97df-f8949a0ee424" config-ref="JMS_Config" destination="accountsQ">
+			<jms:consumer-type >
+				<jms:queue-consumer />
+			</jms:consumer-type>
+		</jms:listener>
+		<logger level="INFO" doc:name="Payload" doc:id="5a12a58a-fbe9-49e7-b05d-8325978e39f1" message="#[payload]"/>
+	</flow>
+</mule>

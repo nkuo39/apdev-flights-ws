@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:jms="http://www.mulesoft.org/schema/mule/jms" xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:wsc="http://www.mulesoft.org/schema/mule/wsc" xmlns:american-flights-api="http://www.mulesoft.org/schema/mule/american-flights-api" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/american-flights-api http://www.mulesoft.org/schema/mule/american-flights-api/current/mule-american-flights-api.xsd
+http://www.mulesoft.org/schema/mule/wsc http://www.mulesoft.org/schema/mule/wsc/current/mule-wsc.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/jms http://www.mulesoft.org/schema/mule/jms/current/mule-jms.xsd">
+	<configuration-properties doc:name="Configuration properties" doc:id="449ff417-202e-4022-aacc-b04393336643" file="config.yaml" />
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="a39d04ec-4b97-4d63-be54-1e504e0fed1f" >
+		<http:listener-connection host="0.0.0.0" port="${http.port}" />
+	</http:listener-config>
+	<american-flights-api:config name="American_Flights_API_Config" doc:name="American Flights API Config" doc:id="6ca695f2-05c2-4beb-aacf-26c249048fc4" property_host="${american.host}" property_port="${american.port}" property_protocol="${american.protocol}" />
+	<http:request-config name="HTTP_Request_config_training" doc:name="HTTP Request configuration" doc:id="5974b417-a72c-4d8f-82fd-d9692203605e" basePath="${training.basepath}" >
+		<http:request-connection host="${training.host}" port="${training.port}" />
+	</http:request-config>
+	<wsc:config name="Delta_Web_Service_Consumer_Config" doc:name="Web Service Consumer Config" doc:id="5ba8570d-7400-49ef-b3b0-dfc9d29cfb48" >
+		<wsc:connection wsdlLocation="${delta.wsdl}" service="${delta.service}" port="${delta.port}" >
+			<reconnection >
+				<reconnect />
+			</reconnection>
+		</wsc:connection>
+	</wsc:config>
+	<configuration doc:name="Configuration" doc:id="9b23a01e-1a68-4ea3-a757-97fda11bc810" defaultErrorHandler-ref="globalError_Handler" />
+	<wsc:config name="Transation_Web_Service_Consumer_Config" doc:name="Web Service Consumer Config" doc:id="a923d7f8-9afa-46d4-92a4-4ea7f2160722" >
+		<wsc:connection wsdlLocation="${transaction.wsdl}" service="${transaction.service}" port="${transaction.port}" />
+	</wsc:config>	<http:request-config name="Transaction_HTTP_Request_configuration" doc:name="HTTP Request configuration" doc:id="edb07ec2-e68d-430d-8335-c79da0993300" basePath="${accounts.basePath}" >
+		<http:request-connection host="${accounts.host}" port="${accounts.port}" />
+	</http:request-config>
+	<db:config name="Database_Config" doc:name="Database Config" doc:id="c274541f-5c35-4745-a43a-5b844fb6c2bb" >
+		<db:my-sql-connection host="${db.host}" port="${db.port}" user="${db.user}" password="${db.password}" database="${db.database}" />
+	</db:config>
+	<jms:config name="JMS_Config" doc:name="JMS Config" doc:id="fc7b0034-8062-4d37-87db-095b592221ee" >
+		<jms:active-mq-connection >
+			<jms:factory-configuration />
+		</jms:active-mq-connection>
+	</jms:config>
+	<error-handler name="globalError_Handler" doc:id="46fc042e-43c9-47b8-bb6f-997923c7f86e" >
+		<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="2e2d7bd0-4862-4611-a569-b0d4c4f428d2" type="WSC:CONNECTIVITY, WSC:INVALID_WSDL">
+			<ee:transform doc:name="error.description" doc:id="e4a9ffa4-189b-4c8d-9750-b9789aa5ff9f">
+				<ee:message>
+					<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	message:  "Data unavailable. Try later. " ++ error.description
+}]]></ee:set-payload>
+				</ee:message>
+			</ee:transform>
+		</on-error-propagate>
+		<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="029f3641-b185-4ea1-b63c-e0e4f800578f" type="ANY">
+			<ee:transform doc:name="error.description" doc:id="8c93d13d-a0ad-469a-bd2d-1095c58b0ee5">
+				<ee:message>
+					<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	message: error.description
+}]]></ee:set-payload>
+				</ee:message>
+			</ee:transform>
+		</on-error-propagate>
+	</error-handler>
+
+</mule>
