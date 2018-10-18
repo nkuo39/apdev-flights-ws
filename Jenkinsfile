@@ -11,8 +11,7 @@ pipeline {
 				ANYPOINT_CREDENTIALS = credentials('anypoint.credentials')
 			}		
 			steps {
-				bat 'echo $ANYPOINT_CREDENTIALS_USR'
-				bat 'mvn package deploy -DmuleDeploy -Dmule.version=4.1.3 -Danypoint.username=$ENV:ANYPOINT_CREDENTIALS_USR -Danypoint.password=$ENV:ANYPOINT_CREDENTIALS_PSW -P cloudhub'
+				bat 'mvn package deploy -DmuleDeploy -Dmule.version=4.1.3 -Danypoint.username=%ANYPOINT_CREDENTIALS_USR% -Danypoint.password=%ANYPOINT_CREDENTIALS_PSW% -P cloudhub'
 			}
 		}
 	}
