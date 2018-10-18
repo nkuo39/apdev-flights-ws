@@ -7,24 +7,11 @@
     <version>1.0.0-SNAPSHOT</version>
     <packaging>mule-application</packaging>
 
-	<name>apdev-flights-ws</name>
-	
-	<distributionManagement>
-		<snapshotRepository>
-			<id>ossrh</id>
-			<url>https://oss.sonatype.org/content/repositories/snapshots</url>
-		</snapshotRepository>
-		<repository>
-			<id>ossrh</id>
-			<url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
-		</repository>
-	</distributionManagement>
-	
+	<name>flights-mod11-dataweave-starter</name>
+
     <properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-
-		<app.runtime>4.3.0</app.runtime>
 		<mule.maven.plugin.version>3.1.6</mule.maven.plugin.version>
 	</properties>
 
@@ -65,12 +52,17 @@
 						<groupId>org.mule.tools.maven</groupId>
 						<artifactId>mule-maven-plugin</artifactId>
 						<configuration>
-							<deploymentType>cloudhub</deploymentType>
-							<muleVersion>4.3.0</muleVersion> 
-							<username>NelsonKuo</username> 
-							<password>Mule@061027</password> 
-							<applicationName>${artifactId}</applicationName>
-							<environment>Sandbox</environment> 
+							<cloudHubDeployment>
+								<uri>https://anypoint.mulesoft.com</uri>
+								<muleVersion>${mule.version}</muleVersion>
+								<username>${anypoint.username}</username>
+								<password>${anypoint.password}</password>
+								<applicationName>${artifactId}-nkuo</applicationName>
+								<environment>Sandbox</environment>
+								<properties>
+									<key>value</key>
+								</properties>
+							</cloudHubDeployment>
 						</configuration>
 						<executions>
 							<execution>
