@@ -57,7 +57,7 @@
 								<muleVersion>${mule.version}</muleVersion>
 								<username>${anypoint.username}</username>
 								<password>${anypoint.password}</password>
-								<applicationName>${artifactId}-nkuo</applicationName>
+								<applicationName>${project.artifactId}-nkuo</applicationName>
 								<environment>Sandbox</environment>
 								<properties>
 									<key>value</key>
