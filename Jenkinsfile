@@ -1,8 +1,5 @@
 pipeline {
 	agent any
-	environment {
-		ANYPOINT_CREDENTIALS = credentials('anypoint.credentials')
-    }
 	stages {
 		stage('Build') {
 			steps {
@@ -10,8 +7,11 @@ pipeline {
 			}
 		}
 		stage('Deploy CloudHub') {
+			environment {
+				ANYPOINT_CREDENTIALS = credentials('anypoint.credentials')
+			}		
 			steps {
-				bat 'mvn package deploy -DmuleDeploy -Dmule.version=4.1.3 -Danypoint.username=$ANYPOINT_CREDENTIALS_USR -Danypoint.password=$ANYPOINT_CREDENTIALS_PSW -P cloudhub'
+				bat 'mvn package deploy -DmuleDeploy -Dmule.version=4.1.3 -Danypoint.username=${ANYPOINT_CREDENTIALS_USR} -Danypoint.password=${ANYPOINT_CREDENTIALS_PSW} -P cloudhub'
 			}
 		}
 	}
